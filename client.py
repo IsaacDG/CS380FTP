@@ -6,7 +6,7 @@ import pickle
 import getpass
 import xor
 import sys
-import pandas as pd
+import os
 
 
 def hashbytes(byts):
@@ -38,8 +38,13 @@ s1.listen(5)
 
 c1, addr1 = s1.accept()
 
-f = open('tosend.png','rb')
-print('Sending...')
+filepath = input('Enter name of file to send: ')
+while not os.path.isfile(filepath):
+    filepath = input('Please enter a valid path to file: ')
+
+f = open(filepath, 'rb')
+
+#f = open('tosend.png','rb')
 
 verified = False
 while(not verified):
@@ -53,11 +58,15 @@ while(not verified):
 
     verif = c1.recv(128)
     if(verif.decode() == "Connection Verified!"):
-        print("HERE")
+        print("Verified. Signed in as " + user)
         verified = True
     else:
         print("Your username or password was incorrect, please try again.")
 
+name, ext = os.path.splitext(filepath)
+s.sendall(("torecv" + ext).encode())
+
+print("Sending your data . . . Please wait.")
 packet = f.read(128)
 pack = {}
 
@@ -73,9 +82,8 @@ while (packet):
         packet = f.read(128)
 
 f.close()
-#print("Done Sending")
+print("The data was sent successfully.")
 s.shutdown(socket.SHUT_WR)
-#print(s.recv(128).decode())
 c1.close()
 s.close                     # Close the socket when done
 

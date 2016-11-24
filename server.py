@@ -6,6 +6,7 @@ import binascii
 import binhex
 import xor
 import pandas as pd
+import os
 
 
 def hashbytes(byts):
@@ -33,7 +34,8 @@ port = 12345                 # Reserve a port for your service.
 fPort = 12346
 
 s.bind((host, port))        # Bind to the port
-f = open('torecv.png','wb')
+
+#f = open('torecv.png','wb')
 s.listen(5)                 # Now wait for client connection.
 
 
@@ -45,8 +47,8 @@ s1.connect((host, fPort))
 while True:
 
 	print('Got connection from', addr)
-	verified = False
 
+	verified = False
 	while (not verified):
 		passw = c.recv(128)
 		passw = passw.decode()
@@ -63,18 +65,19 @@ while True:
 		if(not verified):
 			s1.sendall("Incorrect".encode())
 
-	# while(not verified):
-	# 	passw = c.recv(128)
-	# 	passw = passw.decode()
-	#
-	# 	time.sleep(0.5)
-	#
-	# 	info = passw.split('^')
-	# 	if (info[0] == "isaac" and info[1] == "pass"):
-	# 		s1.sendall("Connection Verified!".encode())
-	# 		verified = True
-	# 	else:
-	# 		s1.sendall("Incorrect".encode())
+	print("Connection verified with sender signed in as " + info[0])
+
+	filepath = c.recv(1024)
+	f = open(filepath, 'wb')
+
+	# writeable = False
+	# while(not writeable):
+	# 	filepath = c.recv(1024)
+	# 	if os.access(os.path.dirname(filepath), os.W_OK):
+	# 		f = open(filepath, 'wb')
+	# 		writeable = True
+	# 		break
+	# 	s1.sendall("0".encode())
 
 	print("Recieving...")
 	packet = c.recv(1024)
