@@ -3,6 +3,7 @@ import time
 import binascii
 import binhex
 import pickle
+import getpass
 
 def hashbytes(byts):
     sum = 17
@@ -28,7 +29,11 @@ s1.listen(5)
 
 c1, addr1 = s1.accept()
 
-passw = "password"
+user = input('Please enter your username: ')
+passw = input('Please enter your password: ')
+#passw = getpass.getpass('Password:')
+
+#passw = "password"
 f = open('tosend.png','rb')
 print('Sending...')
 
@@ -48,7 +53,7 @@ while (packet):
 #    info = packet.decode('utf-16-le') + "^" + str(hash)
 #    s.sendall(info.encode())
     msg = c1.recv(1024)
-    print(msg.decode())
+#    print(msg.decode())
     if(msg.decode() == "OK"):
         packet = f.read(128)
 

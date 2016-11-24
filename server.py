@@ -41,11 +41,11 @@ while True:
 	passw = c.recv(128)
 
 	time.sleep(0.5)
-	
+
 	if passw.decode("utf-8") == "password":
 		print("Connection Verified!")
-	
-	
+
+
 	print("Recieving...")
 	packet = c.recv(1024)
 
@@ -55,14 +55,7 @@ while True:
 			f.write(b['bytes'])
 			s1.sendall("OK".encode())
 		packet = c.recv(1024)
-			#print("true")
-#		packet = packet.decode()
-#		info = packet.split('^')
-#		if(info[1] == str(hashbytes(info[0].encode('utf-16-le')))):
-#			print("good")
-#		f.write(info[0].encode('utf-16-le'))
-#		s1.sendall("OK".encode('utf-8'))
-#		packet = c.recv(1024)
+
 
 	f.close()
 	print("Done Receiving")
