@@ -4,6 +4,8 @@ import time
 import pickle
 import binascii
 import binhex
+import xor
+
 
 def hashbytes(byts):
 	sum = 17
@@ -15,9 +17,12 @@ def hashbytes(byts):
 			sum += byte
 		i += 1
 	sum *= len(byts) * 17
-	return sum % 2000000000
+	sum = sum % 2000000000
+	return int.to_bytes(sum, 10, sys.byteorder)
 
-key = open('key', 'rb')
+k = open('key', 'rb')
+key = k.read()
+
 s = socket.socket()         # Create a socket object
 s1 = socket.socket()
 host = socket.gethostname() # Get local machine name
@@ -31,35 +36,41 @@ s.listen(5)                 # Now wait for client connection.
 
 
 c, addr = s.accept()     	# Establish connection with client.
-#c1, addr1 = s1.accept()
+
 
 s1.connect((host, fPort))
 
 while True:
 	print("hello")
-#	c, addr = s.accept()      #Establish connection with client.
+
 	print('Got connection from', addr)
-	passw = c.recv(128)
+	verified = False
+	while(not verified):
+		passw = c.recv(128)
+		passw = passw.decode()
 
-	time.sleep(0.5)
+		time.sleep(0.5)
 
-	if passw.decode("utf-8") == "password":
-		print("Connection Verified!")
-
+		info = passw.split('^')
+		if (info[0] == "isaac" and info[1] == "pass"):
+			s1.sendall("Connection Verified!".encode())
+			verified = True
+		else:
+			s1.sendall("Incorrect".encode())
 
 	print("Recieving...")
 	packet = c.recv(1024)
 
 	while(packet):
 		b = pickle.loads(packet)	#load the pickled dictionary
-		if (b['hash'] == hashbytes(b['bytes'])):
-			f.write(b['bytes'])
+		if (xor.decrypt(b['hash'],key)  == hashbytes(xor.decrypt(b['bytes'], key))):
+			f.write(xor.decrypt(b['bytes'], key))
 			s1.sendall("OK".encode())
 		packet = c.recv(1024)
 
 
 	f.close()
 	print("Done Receiving")
-	#    c.send('Thank you for connecting')
+
 	c.close()                # Close the connection
 	sys.exit()

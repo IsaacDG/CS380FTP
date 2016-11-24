@@ -2,16 +2,16 @@ file = open('tosend.png', 'rb')
 file1 = open('key', 'rb')
 bts = file1.read()
 
-print(ord('a'))
+#print(ord('a'))
 
 buffer = file.read(8)
 
 
-for bt in buffer:
-    print(bt)
+# for bt in buffer:
+#     print(bt)
 
 stuff = []
-print(buffer)
+#print(buffer)
 def encrypt(buffer, key):
     encrypted = bytearray()
     for i, b in enumerate(buffer):
@@ -28,19 +28,19 @@ def decrypt(encrypted, key):
 
 
 encrypted = encrypt(buffer, bts)
-print(encrypted)
-print(decrypt(encrypted, bts))
+# print(encrypted)
+# print(decrypt(encrypted, bts))
 i = 0
 for b in buffer:
     stuff.append(b ^ bts[i % len(bts)])
     i+=1
 
-print(stuff) #encrypted
+#print(stuff) #encrypted
 
 j = 0
-for thing in stuff:
-    print(thing ^ bts[j % len(bts)], )
-    j+=1
+# for thing in stuff:
+#     print(thing ^ bts[j % len(bts)], )
+#     j+=1
 
 
 # j = 0
