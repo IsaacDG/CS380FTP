@@ -6,11 +6,30 @@ print(ord('a'))
 
 buffer = file.read(8)
 
+
 for bt in buffer:
     print(bt)
 
 stuff = []
+print(buffer)
+def encrypt(buffer, key):
+    encrypted = bytearray()
+    for i, b in enumerate(buffer):
+        encrypted.append(b ^ key[i % len(key)])
+        i += 1
+    return bytes(encrypted)
 
+def decrypt(encrypted, key):
+    decrypted = bytearray()
+    for i, b in enumerate(encrypted):
+        decrypted.append(b ^ key[i % len(key)])
+        i+=1
+    return bytes(decrypted)
+
+
+encrypted = encrypt(buffer, bts)
+print(encrypted)
+print(decrypt(encrypted, bts))
 i = 0
 for b in buffer:
     stuff.append(b ^ bts[i % len(bts)])

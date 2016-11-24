@@ -17,6 +17,7 @@ def hashbytes(byts):
     sum *= len(byts) * 17
     return sum % 2000000000
 
+key = open('key', 'rb')
 s = socket.socket()         # Create a socket object
 s1 = socket.socket()
 host = socket.gethostname() # Get local machine name
@@ -35,6 +36,7 @@ passw = input('Please enter your password: ')
 
 #passw = "password"
 f = open('tosend.png','rb')
+encrypt(buffer, byts)
 print('Sending...')
 
 s.sendall(passw.encode('utf-8'))
@@ -47,7 +49,7 @@ pack = {}
 while (packet):
     pack['bytes'] = packet
     pack['hash'] = hashbytes(packet)
-    a = pickle.dumps(pack)
+    a = pickle.dumps(pack)  #pickled dictionary{bytes, hash}
     s.sendall(a)
 #    hash = hashbytes(packet)
 #    info = packet.decode('utf-16-le') + "^" + str(hash)

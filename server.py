@@ -17,6 +17,7 @@ def hashbytes(byts):
 	sum *= len(byts) * 17
 	return sum % 2000000000
 
+key = open('key', 'rb')
 s = socket.socket()         # Create a socket object
 s1 = socket.socket()
 host = socket.gethostname() # Get local machine name
@@ -50,7 +51,7 @@ while True:
 	packet = c.recv(1024)
 
 	while(packet):
-		b = pickle.loads(packet)
+		b = pickle.loads(packet)	#load the pickled dictionary
 		if (b['hash'] == hashbytes(b['bytes'])):
 			f.write(b['bytes'])
 			s1.sendall("OK".encode())
