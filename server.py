@@ -5,6 +5,7 @@ import pickle
 import binascii
 import binhex
 import xor
+import pandas as pd
 
 
 def hashbytes(byts):
@@ -20,7 +21,8 @@ def hashbytes(byts):
 	sum = sum % 2000000000
 	return int.to_bytes(sum, 10, sys.byteorder)
 
-k = open('key', 'rb')
+k = open('key', 'rb')               # open file containing bytes for xor
+data = pd.read_csv('usepass.csv')   # open table for username and passwords
 key = k.read()
 
 s = socket.socket()         # Create a socket object
@@ -41,22 +43,38 @@ c, addr = s.accept()     	# Establish connection with client.
 s1.connect((host, fPort))
 
 while True:
-	print("hello")
 
 	print('Got connection from', addr)
 	verified = False
-	while(not verified):
+
+	while (not verified):
 		passw = c.recv(128)
 		passw = passw.decode()
 
 		time.sleep(0.5)
 
 		info = passw.split('^')
-		if (info[0] == "isaac" and info[1] == "pass"):
-			s1.sendall("Connection Verified!".encode())
-			verified = True
-		else:
+
+		for u, p in zip(data['username'], data['password']):
+			if (u == info[0] and p == info[1]):
+				s1.sendall("Connection Verified!".encode())
+				verified = True
+				break
+		if(not verified):
 			s1.sendall("Incorrect".encode())
+
+	# while(not verified):
+	# 	passw = c.recv(128)
+	# 	passw = passw.decode()
+	#
+	# 	time.sleep(0.5)
+	#
+	# 	info = passw.split('^')
+	# 	if (info[0] == "isaac" and info[1] == "pass"):
+	# 		s1.sendall("Connection Verified!".encode())
+	# 		verified = True
+	# 	else:
+	# 		s1.sendall("Incorrect".encode())
 
 	print("Recieving...")
 	packet = c.recv(1024)

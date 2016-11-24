@@ -6,6 +6,7 @@ import pickle
 import getpass
 import xor
 import sys
+import pandas as pd
 
 
 def hashbytes(byts):
