@@ -41,7 +41,7 @@ f = open(filepath, 'rb')
 #f = open('tosend.png','rb')
 
 verified = False
-while(not verified):
+while not verified:
     user = input('Please enter your username: ')
     passw = input('Please enter your password: ')
 

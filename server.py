@@ -9,6 +9,7 @@ import pandas as pd
 import os
 
 
+
 def hashbytes(byts):
 	result = 17
 
@@ -30,7 +31,6 @@ fPort = 12346
 
 s.bind((host, port))        # Bind to the port
 
-#f = open('torecv.png','wb')
 s.listen(5)                 # Now wait for client connection.
 
 
