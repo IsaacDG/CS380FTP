@@ -10,17 +10,24 @@ import os
 
 
 def hashbytes(byts):
-	sum = 17
-	i = 0
-	for byte in byts:
-		if(i%2 == 0):
-			sum *= (byte + 17)
-		else:
-			sum += byte
-		i += 1
-	sum *= len(byts) * 17
-	sum = sum % 2000000000
-	return int.to_bytes(sum, 10, sys.byteorder)
+	result = 17
+
+	for b in byts:
+		result = result * 23 + b.__hash__()
+
+	return int.to_bytes(result, 100, sys.byteorder)
+
+	# sum = 17
+	# i = 0
+	# for byte in byts:
+	# 	if(i%2 == 0):
+	# 		sum *= (byte + 17)
+	# 	else:
+	# 		sum += byte
+	# 	i += 1
+	# sum *= len(byts) * 17
+	# sum = sum % 2000000000
+	# return int.to_bytes(sum, 10, sys.byteorder)
 
 k = open('key', 'rb')               # open file containing bytes for xor
 data = pd.read_csv('usepass.csv')   # open table for username and passwords
@@ -70,25 +77,29 @@ while True:
 	filepath = c.recv(1024)
 	f = open(filepath, 'wb')
 
-	# writeable = False
-	# while(not writeable):
-	# 	filepath = c.recv(1024)
-	# 	if os.access(os.path.dirname(filepath), os.W_OK):
-	# 		f = open(filepath, 'wb')
-	# 		writeable = True
-	# 		break
-	# 	s1.sendall("0".encode())
-
 	print("Recieving...")
 	packet = c.recv(1024)
-
-	while(packet):
+	retry = 0
+	while packet:
 		b = pickle.loads(packet)	#load the pickled dictionary
-		if (xor.decrypt(b['hash'],key)  == hashbytes(xor.decrypt(b['bytes'], key))):
-			f.write(xor.decrypt(b['bytes'], key))
-			s1.sendall("OK".encode())
-		packet = c.recv(1024)
+		senthash = xor.decrypt(b['hash'],key)
+		rehash = hashbytes(xor.decrypt(b['bytes'], key))
 
+		if senthash == rehash:
+			f.write(xor.decrypt(b['bytes'], key))
+			print("YES")
+			s1.sendall("OK".encode())
+		else:
+			if retry < 3:
+				retry += 1
+				s1.sendall("0".encode())
+			else:
+				s1.sendall("CLOSING".encode())
+				print("Hashes were not matching, closing connection.")
+				time.sleep(1)
+				c.close()
+				sys.exit()
+		packet = c.recv(1024)
 
 	f.close()
 	print("Done Receiving")
