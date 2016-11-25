@@ -17,18 +17,6 @@ def hashbytes(byts):
 
 	return int.to_bytes(result, 100, sys.byteorder)
 
-	# sum = 17
-	# i = 0
-	# for byte in byts:
-	# 	if(i%2 == 0):
-	# 		sum *= (byte + 17)
-	# 	else:
-	# 		sum += byte
-	# 	i += 1
-	# sum *= len(byts) * 17
-	# sum = sum % 2000000000
-	# return int.to_bytes(sum, 10, sys.byteorder)
-
 k = open('key', 'rb')               # open file containing bytes for xor
 data = pd.read_csv('usepass.csv')   # open table for username and passwords
 key = k.read()
@@ -69,7 +57,7 @@ while True:
 				s1.sendall("Connection Verified!".encode())
 				verified = True
 				break
-		if(not verified):
+		if not verified:
 			s1.sendall("Incorrect".encode())
 
 	print("Connection verified with sender signed in as " + info[0])
@@ -86,11 +74,11 @@ while True:
 		rehash = hashbytes(xor.decrypt(b['bytes'], key))
 
 		if senthash == rehash:
+			retry = 0
 			f.write(xor.decrypt(b['bytes'], key))
-			print("YES")
 			s1.sendall("OK".encode())
 		else:
-			if retry < 3:
+			if retry < 4:
 				retry += 1
 				s1.sendall("0".encode())
 			else:

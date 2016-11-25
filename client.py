@@ -16,17 +16,6 @@ def hashbytes(byts):
         result = result * 23 + b.__hash__()
 
     return int.to_bytes(result, 100, sys.byteorder)
-    # i = 0
-    # for byte in byts:
-    #     if(i%2 == 0):
-    #         sum *= (byte + 17)
-    #     else:
-    #         sum += byte
-    #     i += 1
-    # sum *= len(byts) * 17
-    # sum = sum % 2000000000
-    # return int.to_bytes(sum, 10, sys.byteorder)
-
 
 k = open('key', 'rb')
 key = k.read()
@@ -76,9 +65,11 @@ packet = f.read(128)
 pack = {}
 
 test = False
+count = 0
 
 while packet:
-    if not test:
+    if count < 2:
+        count += 1
         encrypteddat = xor.encrypt(packet, key)
         test = bytearray(encrypteddat)
         test[0] = 1
@@ -90,10 +81,10 @@ while packet:
         s.sendall(a)
     else:
         encrypteddat = xor.encrypt(packet, key)
-        test = bytearray(encrypteddat)
-        test[0] = 1
+        # test = bytearray(encrypteddat)
+        # test[0] = 1
         encryptedhash = xor.encrypt(hashbytes(packet), key)
-        pack['bytes'] = test
+        pack['bytes'] = encrypteddat
         pack['hash'] = encryptedhash
         a = pickle.dumps(pack)  #pickled dictionary{bytes, hash}
         s.sendall(a)
