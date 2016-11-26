@@ -2,14 +2,13 @@ import binascii
 import base64
 import re
 
-f = open('tosend.png', 'rb')
+# f = open('tosend.png', 'rb')
 
 
 def rshift(val, n): return (val % 0x100000000) >> n
 
 
 def b64_encode(s):
-#	s = f.read(3)
 	b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	r = ""
 	p = ""
@@ -21,7 +20,7 @@ def b64_encode(s):
 			s.append(ord('\0'))
 			c += 1
 
-	#i = 0
+
 	for i in range(0, len(s), 3):
 		# if (i > 0) and (i / 3 * 4) % 76 == 0:
 		# 	r += "\r\n"
@@ -41,13 +40,13 @@ def b64_encode(s):
 # 	s = s.replace(str(re.compile('[^'+b64chars.join("")+'=]')), "")
 
 #print(base64.b64encode(f.read()))
-data = f.read()
-thing = str(base64.b64encode(data))
-mine = b64_encode(bytearray(data))
-print(base64.b64decode(mine))
-print(data)
-if b64_encode(bytearray(data)) == thing[2:len(thing) - 1]:
-	print("TRUE")
+# data = f.read()
+# thing = str(base64.b64encode(data))
+# mine = b64_encode(bytearray(data))
+# print(base64.b64decode(mine))
+# print(data)
+# if b64_encode(bytearray(data)) == thing[2:len(thing) - 1]:
+# 	print("TRUE")
 #print(base64.b64encode(data))
 #print(base64.b64encode(data))
 #if(base64.b64encode(data) == b64_encode(bytearray(data))):
