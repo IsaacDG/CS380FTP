@@ -8,6 +8,7 @@ import xor
 import hash
 import ba64
 import os
+from passlib.hash import pbkdf2_sha256
 
 def sender():
 	k = open('key', 'rb')
@@ -70,7 +71,7 @@ def sender():
 	count = 0
 
 	while packet:
-		if count < 2:
+		if count < 5:
 			count += 1
 			encrypteddat = xor.encrypt(packet, key)
 			test = bytearray(encrypteddat)
@@ -144,8 +145,8 @@ def receiver():
 
 			info = passw.split('^')
 
-			for u, p in zip(data['username'], data['password']):
-				if (u == info[0] and p == info[1]):
+			for u, p in zip(data['username'], data['hash']):
+				if (u == info[0] and pbkdf2_sha256.verify(info[1], p)):
 					s1.sendall("Connection Verified!".encode())
 					verified = True
 					break
@@ -180,6 +181,7 @@ def receiver():
 					s1.sendall("CLOSING".encode())
 					print("Hashes were not matching, closing connection.")
 					time.sleep(1)
+#					os.unlink(f.name)
 					c.close()
 					sys.exit()
 			packet = c.recv(1024)

@@ -1,4 +1,4 @@
-username,password
-isaac,pass
-test,test
-cs380,presentation
+username,password,hash
+isaac,pass,$pbkdf2-sha256$10000$WitFqDXGGOOcs5Yy5rxXag$lW0WDRUaj1/vs/j.iUVODjhmuKnrCHW5W5k2uWISglM
+test,test,$pbkdf2-sha256$10000$ovS.l5Jy7v1/7x3DGINQag$mOipmDwiWzWNZtSDHff9bNQPQTEHedsiNNeDXG6g2Wk
+cs380,presentation,$pbkdf2-sha256$10000$TyklhLBWam3NWYtR6p2zlg$E0w6ObZgW7sN.76Ws6PQQVlkj/DowvpdZXRalEF7OBs
