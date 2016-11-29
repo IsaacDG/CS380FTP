@@ -63,14 +63,14 @@ def sender():
 		s.sendall("N".encode())
 
 	print("Sending your data . . . Please wait.")
-	packet = f.read(128)
+	packet = f.read(1024)
 	pack = {}
 
 	test = False
 	count = 0
 
 	while packet:
-		if count < 2:
+		if count < 0:
 			count += 1
 			encrypteddat = xor.encrypt(packet, key)
 			test = bytearray(encrypteddat)
@@ -83,8 +83,6 @@ def sender():
 			s.sendall(a)
 		else:
 			encrypteddat = xor.encrypt(packet, key)
-			# test = bytearray(encrypteddat)
-			# test[0] = 1
 			encryptedhash = xor.encrypt(hash.hashbytes(packet), key)
 			pack['bytes'] = encrypteddat
 			pack['hash'] = encryptedhash
@@ -94,7 +92,7 @@ def sender():
 		msg = c1.recv(1024)
 
 		if msg.decode() == "OK":  # chunk received and verified.
-			packet = f.read(128)
+			packet = f.read(1024)
 		elif msg.decode() == "0":
 			print("Hashes did not match, retrying")
 			packet = packet
@@ -161,8 +159,10 @@ def receiver():
 		f = open(filepath, 'wb')
 
 		print("Recieving...")
-		packet = c.recv(1024)
+		packet = c.recv(3000)
 		retry = 0
+		bytes = 0
+
 		while packet:
 			b = pickle.loads(packet)  # load the pickled dictionary
 			senthash = xor.decrypt(b['hash'], key)
@@ -171,6 +171,9 @@ def receiver():
 			if senthash == rehash:
 				retry = 0
 				f.write(xor.decrypt(b['bytes'], key))
+				bytes += len(b['bytes'])
+				print("Received " + str(bytes) + " bytes.")
+
 				s1.sendall("OK".encode())
 			else:
 				if retry < 4:
@@ -182,7 +185,7 @@ def receiver():
 					time.sleep(1)
 					c.close()
 					sys.exit()
-			packet = c.recv(1024)
+			packet = c.recv(3000)
 
 		f.close()
 		if asc == "A":
@@ -203,10 +206,8 @@ def main():
 	i = input('Are you the receiver(0) or sender(1)? ')
 
 	if i == "0":
-		print("HERE")
 		receiver()
 	else:
-		print("HERE1")
 		sender()
 
 if __name__ == "__main__":
