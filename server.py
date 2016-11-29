@@ -63,6 +63,7 @@ def main():
 		filepath = c.recv(1024)
 
 		asc = c.recv(1024).decode()
+		print(asc)
 
 		f = open(filepath, 'wb')
 
@@ -81,6 +82,7 @@ def main():
 			else:
 				if retry < 4:
 					retry += 1
+					print("Hash did not match, asking sender to try again. . .")
 					s1.sendall("0".encode())
 				else:
 					s1.sendall("CLOSING".encode())

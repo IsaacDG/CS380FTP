@@ -10,6 +10,7 @@ import ba64
 import os
 from passlib.hash import pbkdf2_sha256
 
+
 def sender():
 	k = open('key', 'rb')
 	key = k.read()
@@ -33,11 +34,11 @@ def sender():
 	f = open(filepath, 'rb')
 
 	verified = False
-	while not verified:
+	while not verified: # loop to check for verification of password and username
 		user = input('Please enter your username: ')
 		passw = input('Please enter your password: ')
 
-		unpass = user + "^" + passw
+		unpass = user + "^" + passw         # delimit the username and password
 		s.sendall(unpass.encode('utf-8'))
 
 		time.sleep(0.5)
@@ -56,46 +57,50 @@ def sender():
 	if ans == 'y':
 		print("ASCII Armoring . . .")
 		dat = f.read()
-		f = open(name + ".asc", 'wb')
+		f = open(name + ".asc", 'wb')           # writing ASCII bytes to separate file so as to not overwrite the actual data
 		f.write(bytes(ba64.b64_encode(bytearray(dat)).encode()))
 		f = open(name + ".asc", 'rb')
+		filepath = name + ".asc"
 		s.sendall("A".encode())
 	else:
 		s.sendall("N".encode())
 
+	statinfo = os.stat(filepath)
+	totalBytes = statinfo.st_size
+	s.sendall(str(totalBytes).encode())  # send total size of file to receiver
+
 	print("Sending your data . . . Please wait.")
-	packet = f.read(128)
+	packet = f.read(2048)
 	pack = {}
 
-	test = False
-	count = 0
+	count = 0       # debugging flag to send bad data
+	packCount = 0   # count how many packets we have sent thus far
 
 	while packet:
-		if count < 5:
+		if count < 2:
 			count += 1
 			encrypteddat = xor.encrypt(packet, key)
 			test = bytearray(encrypteddat)
-			test[0] = 1
+			test[0] = 1     # modify the first byte
 			pack['bytes'] = test
 			encryptedhash = xor.encrypt(hash.hashbytes(packet), key)
 			pack['hash'] = encryptedhash
 			a = pickle.dumps(pack)
-			test = True
 			s.sendall(a)
 		else:
-			encrypteddat = xor.encrypt(packet, key)
-			# test = bytearray(encrypteddat)
-			# test[0] = 1
-			encryptedhash = xor.encrypt(hash.hashbytes(packet), key)
+			encrypteddat = xor.encrypt(packet, key)                     # encrypt the data with XOR cipher
+			encryptedhash = xor.encrypt(hash.hashbytes(packet), key)    # encrypt the hash with XOR cipher
 			pack['bytes'] = encrypteddat
 			pack['hash'] = encryptedhash
-			a = pickle.dumps(pack)  # pickled dictionary{bytes, hash}
-			s.sendall(a)
+			a = pickle.dumps(pack)                                      # pickled dictionary{bytes, hash}
+			s.sendall(a)                                                # send the dictionary
 
-		msg = c1.recv(1024)
+		msg = c1.recv(128)
 
 		if msg.decode() == "OK":  # chunk received and verified.
-			packet = f.read(128)
+			packCount += 1
+			print("Data sent and hash verified for packet #" + str(packCount))
+			packet = f.read(2048)
 		elif msg.decode() == "0":
 			print("Hashes did not match, retrying")
 			packet = packet
@@ -110,7 +115,7 @@ def sender():
 	print("The data was sent successfully.")
 	s.shutdown(socket.SHUT_WR)
 	c1.close()
-	s.close  # Close the socket when done
+
 
 def receiver():
 	k = open('key', 'rb')  # open file containing bytes for xor
@@ -120,7 +125,6 @@ def receiver():
 	s = socket.socket()  # Create a socket object
 	s1 = socket.socket()
 	host = socket.gethostname()  # Get local machine name
-	host1 = socket.gethostname()
 	port = 12345  # Reserve a port for your service.
 	fPort = 12346
 
@@ -137,7 +141,8 @@ def receiver():
 		print('Got connection from', addr)
 
 		verified = False
-		while (not verified):
+
+		while not verified:
 			passw = c.recv(128)
 			passw = passw.decode()
 
@@ -146,7 +151,7 @@ def receiver():
 			info = passw.split('^')
 
 			for u, p in zip(data['username'], data['hash']):
-				if (u == info[0] and pbkdf2_sha256.verify(info[1], p)):
+				if u == info[0] and pbkdf2_sha256.verify(info[1], p):
 					s1.sendall("Connection Verified!".encode())
 					verified = True
 					break
@@ -159,39 +164,44 @@ def receiver():
 
 		asc = c.recv(1024).decode()
 
+		size = c.recv(128).decode()
+
 		f = open(filepath, 'wb')
 
 		print("Recieving...")
-		packet = c.recv(1024)
-		retry = 0
+		packet = c.recv(3000)   # how many bytes to read in, 3000 arbitrary, just big enough to get pickle
+		retry = 0               # keep track of how many times we have retried
+		bytesDLd = 0
 		while packet:
 			b = pickle.loads(packet)  # load the pickled dictionary
 			senthash = xor.decrypt(b['hash'], key)
 			rehash = hash.hashbytes(xor.decrypt(b['bytes'], key))
 
-			if senthash == rehash:
-				retry = 0
+			if senthash == rehash:              # check for integrity
+				retry = 0                           # retry count back to 0 because we are not retrying
+				bytesDLd += len(b['bytes'])
 				f.write(xor.decrypt(b['bytes'], key))
+				print("Bytes downloaded: " + str(bytesDLd) + " of " + str(size))
 				s1.sendall("OK".encode())
 			else:
-				if retry < 4:
+				if retry < 4:                   # we can still retry if retry is less than 4
 					retry += 1
+					print("Hash did not match, asking sender to try again. . .")
 					s1.sendall("0".encode())
 				else:
-					s1.sendall("CLOSING".encode())
+					s1.sendall("CLOSING".encode())  # retried too many times
 					print("Hashes were not matching, closing connection.")
 					time.sleep(1)
-#					os.unlink(f.name)
 					c.close()
 					sys.exit()
-			packet = c.recv(1024)
+			packet = c.recv(3000)
 
 		f.close()
-		if asc == "A":
+		if asc == "A":  # we sent over ASCII armored data
 			print("Decoding ASCII Armored Data . . . ")
-			f = open(filepath, 'rb')
-			dat = base64.b64decode(f.read())
-			trueF = open(filepath, 'wb')
+			f = open(filepath, 'rb')            # read the ASCII data that we wrote
+			dat = base64.b64decode(f.read())    # decoding the ASCII data we wrote
+			trueF = open(filepath, 'wb')        # the true, de-ASCII'd data
 			trueF.write(dat)
 			trueF.close()
 		print("Done Receiving")
@@ -200,15 +210,12 @@ def receiver():
 		sys.exit()
 
 
-
 def main():
 	i = input('Are you the receiver(0) or sender(1)? ')
 
 	if i == "0":
-		print("HERE")
 		receiver()
 	else:
-		print("HERE1")
 		sender()
 
 if __name__ == "__main__":
